@@ -165,13 +165,15 @@ public class DrawMgr extends JPanel implements MouseListener{
                     System.out.println("This mans won " + winner);
                     break;
                 }
-            } else if (!boardPrime[1][i].getOwner().equals(Square.owner.neutral)) {
+            }
+            if (!boardPrime[1][i].getOwner().equals(Square.owner.neutral)) {
                 if (boardPrime[1][i].getOwner().equals(boardPrime[2][i].getOwner()) && boardPrime[1][i].getOwner().equals(boardPrime[0][i].getOwner())) {
                     winner = boardPrime[1][i].getOwner();
                     System.out.println("This mans won " + winner);
                     break;
                 }
-            } else if (!boardPrime[1][1].getOwner().equals(Square.owner.neutral)) {
+            }
+            if (!boardPrime[1][1].getOwner().equals(Square.owner.neutral)) {
                 if (boardPrime[2][2].getOwner().equals(boardPrime[1][1].getOwner()) && boardPrime[0][0].getOwner().equals(boardPrime[1][1].getOwner()) || boardPrime[0][2].getOwner().equals(boardPrime[1][1].getOwner()) && boardPrime[2][0].getOwner().equals(boardPrime[1][1].getOwner())) {
                     winner = boardPrime[1][1].getOwner();
                     System.out.println("This mans won " + winner);

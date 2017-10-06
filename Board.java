@@ -44,14 +44,16 @@ public class Board {
                         System.out.println("Square belongs to " + thisOwner);
                         break;
                     }
-                } else if (!betaBoard[1][i].getOwner().equals(Square.owner.neutral)) {
+                }
+                if (!betaBoard[1][i].getOwner().equals(Square.owner.neutral)) {
                     if (betaBoard[1][i].getOwner().equals(betaBoard[2][i].getOwner()) && betaBoard[1][i].getOwner().equals(betaBoard[0][i].getOwner())) {
                         thisOwner = betaBoard[1][i].getOwner();
                         thisMgr.connect_squares(betaBoard[2][i], betaBoard[0][i]);
                         System.out.println("Square belongs to " + thisOwner);
                         break;
                     }
-                } else if (!betaBoard[1][1].getOwner().equals(Square.owner.neutral)) {
+                }
+                if (!betaBoard[1][1].getOwner().equals(Square.owner.neutral)) {
                     if (betaBoard[2][2].getOwner().equals(betaBoard[1][1].getOwner()) && betaBoard[0][0].getOwner().equals(betaBoard[1][1].getOwner())) {
                         thisOwner = betaBoard[1][1].getOwner();
                         thisMgr.connect_squares(betaBoard[2][2], betaBoard[0][0]);
