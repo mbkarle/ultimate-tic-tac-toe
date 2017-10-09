@@ -323,7 +323,7 @@ public class DrawMgr extends JPanel implements MouseListener{
             initialize_game();
             repaint();
         }
-        else{
+        else if(!paused){
             mouseCoords = MouseInfo.getPointerInfo().getLocation();
             Square.owner curr_owner = Square.owner.neutral;
             if(player1Turn){
