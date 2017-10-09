@@ -1,4 +1,6 @@
+package GameElements;
 
+import GameElements.Board;
 
 /**
  * Created by student on 10/2/17.

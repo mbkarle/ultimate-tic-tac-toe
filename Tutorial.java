@@ -1,8 +1,9 @@
+import GameElements.DrawMgr;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 
 /**
  * Created by student on 10/6/17.
@@ -43,7 +44,7 @@ public class Tutorial extends JPanel {
         endButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println(DrawMgr.getAllComponents(parentFrame));
+                //System.out.println(GameElements.DrawMgr.getAllComponents(parentFrame));
                 end_tutorial();
             }
         });

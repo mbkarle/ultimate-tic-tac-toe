@@ -1,3 +1,5 @@
+package GameElements;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -174,14 +176,14 @@ public class DrawMgr extends JPanel implements MouseListener{
             i++;
             if(Math.abs(square.getCoords()[0] - potential_coords[0]) < 10 && Math.abs(square.getCoords()[1] - potential_coords[1]) < 10){
                 ans = square;
-//                System.out.println("Square's coords" + Arrays.toString(square.getCoords()));
+//                System.out.println("GameElements.Square's coords" + Arrays.toString(square.getCoords()));
 //                System.out.println("Mouse rounded coords" + Arrays.toString(potential_coords));
 //                System.out.println("We have a match");
 //                System.out.println();
                 return ans;
             }
             else if(i == squaresList.size()){
-                System.out.println("Square's coords" + Arrays.toString(square.getCoords()));
+                System.out.println("GameElements.Square's coords" + Arrays.toString(square.getCoords()));
                 System.out.println("Mouse rounded coords" + Arrays.toString(potential_coords));
                 System.out.println("no match");
             }

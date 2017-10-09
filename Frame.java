@@ -1,3 +1,5 @@
+import GameElements.DrawMgr;
+
 import javax.swing.*;
 import java.awt.*;
 
