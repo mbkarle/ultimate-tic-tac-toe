@@ -37,7 +37,7 @@ public class Board {
     public void check_win() {
         if (thisOwner.equals(Square.owner.neutral)) {
             for (int i = 0; i < 3; i++) {
-                if (!betaBoard[i][1].getOwner().equals(Square.owner.neutral)) {
+                if (!betaBoard[i][1].getOwner().equals(Square.owner.neutral)) { //checks each square in 2nd column
                     if (betaBoard[i][1].getOwner().equals(betaBoard[i][2].getOwner()) && betaBoard[i][1].getOwner().equals(betaBoard[i][0].getOwner())) {
                         thisOwner = betaBoard[i][1].getOwner();
                         thisMgr.connect_squares(betaBoard[i][2], betaBoard[i][0]);
@@ -45,7 +45,7 @@ public class Board {
                         break;
                     }
                 }
-                if (!betaBoard[1][i].getOwner().equals(Square.owner.neutral)) {
+                if (!betaBoard[1][i].getOwner().equals(Square.owner.neutral)) { //checks each square in 2nd row
                     if (betaBoard[1][i].getOwner().equals(betaBoard[2][i].getOwner()) && betaBoard[1][i].getOwner().equals(betaBoard[0][i].getOwner())) {
                         thisOwner = betaBoard[1][i].getOwner();
                         thisMgr.connect_squares(betaBoard[2][i], betaBoard[0][i]);
@@ -53,7 +53,7 @@ public class Board {
                         break;
                     }
                 }
-                if (!betaBoard[1][1].getOwner().equals(Square.owner.neutral)) {
+                if (!betaBoard[1][1].getOwner().equals(Square.owner.neutral)) { // checks diagonals
                     if (betaBoard[2][2].getOwner().equals(betaBoard[1][1].getOwner()) && betaBoard[0][0].getOwner().equals(betaBoard[1][1].getOwner())) {
                         thisOwner = betaBoard[1][1].getOwner();
                         thisMgr.connect_squares(betaBoard[2][2], betaBoard[0][0]);
@@ -73,6 +73,10 @@ public class Board {
 
     public Square.owner getOwner(){
         return thisOwner;
+    }
+
+    public void setThisOwner(Square.owner otherOwner){
+        thisOwner = otherOwner;
     }
 
     public void setThisMgr(DrawMgr drawMgr){

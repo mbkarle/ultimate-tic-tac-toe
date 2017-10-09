@@ -1,6 +1,8 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
@@ -16,12 +18,14 @@ public class DrawMgr extends JPanel implements MouseListener{
     private Board[][] boardPrime = new Board[3][3];
     private ArrayList<Square[]> connectedSquares;
     private int boxWidth, boxHeight;
-    private boolean player1Turn;
+    private boolean player1Turn, paused;
     Point mouseCoords;
     ArrayList<Square> squaresList;
     ArrayList<Square> changedSquares;
-    Board corresponding_board;
+    Board corresponding_board, last_corresponding;
     private Square.owner winner;
+    private JButton pauseButton, undoButton;
+
    // Graphics2D graphics2D;
 
 
@@ -29,10 +33,36 @@ public class DrawMgr extends JPanel implements MouseListener{
 
         addMouseListener(this);
         setFocusable(true);
-        initialize_game();
+        initialize_game(); //add mouse listener and begin game!
+
+        setLayout(null);   //add pause button
+
+        pauseButton = new JButton("||");
+        pauseButton.setBounds(5, 5, 20, 20);
+        pauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(paused){
+                    remove(undoButton);
+                    revalidate();
+                }
+                paused = !paused;
+                repaint();
+            }
+        });
+        add(pauseButton);
+        revalidate();
+
+        undoButton = new JButton("Undo Last Move");
+        undoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                undo_last_move();
+            }
+        });
     }
 
-    public void paintComponent(Graphics g){
+    public void paintComponent(Graphics g){ //handles all drawing
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
         for(Square square : changedSquares){
@@ -48,7 +78,9 @@ public class DrawMgr extends JPanel implements MouseListener{
             }
         }
         drawBoard(g2);
-
+        if(paused){
+            drawPauseMenu(g2);
+        }
     }
 
     public void initialize_game(){ //starts and resets game
@@ -103,7 +135,7 @@ public class DrawMgr extends JPanel implements MouseListener{
                 }
             }
         }
-        for(Square[] squares : connectedSquares){
+        for(Square[] squares : connectedSquares){ //connects any squares that were part of a winning three-in-a-row set
             g2.setStroke(new BasicStroke(3));
             g2.setColor(Color.BLACK);
             int centerX = boxWidth / 6;
@@ -129,7 +161,7 @@ public class DrawMgr extends JPanel implements MouseListener{
         return img;
     }
 
-    public Square getSquare(Point point){
+    public Square getSquare(Point point){ //returns the square which a given point is on; used for mouse location
 
         int[] offset = new int[]{getLocationOnScreen().x, getLocationOnScreen().y};
         int[] offset_coords = new int[]{point.x - offset[0], point.y - offset[1]};
@@ -159,21 +191,21 @@ public class DrawMgr extends JPanel implements MouseListener{
 
     public void check_full_win(Graphics2D g2){
         for (int i = 0; i < 3; i++) {
-            if (!boardPrime[i][1].getOwner().equals(Square.owner.neutral)) {
+            if (!boardPrime[i][1].getOwner().equals(Square.owner.neutral)) { //checks each square in 2nd column
                 if (boardPrime[i][1].getOwner().equals(boardPrime[i][2].getOwner()) && boardPrime[i][1].getOwner().equals(boardPrime[i][0].getOwner())) {
                     winner = boardPrime[i][1].getOwner();
                     System.out.println("This mans won " + winner);
                     break;
                 }
             }
-            if (!boardPrime[1][i].getOwner().equals(Square.owner.neutral)) {
+            if (!boardPrime[1][i].getOwner().equals(Square.owner.neutral)) { //checks each square in 2nd row
                 if (boardPrime[1][i].getOwner().equals(boardPrime[2][i].getOwner()) && boardPrime[1][i].getOwner().equals(boardPrime[0][i].getOwner())) {
                     winner = boardPrime[1][i].getOwner();
                     System.out.println("This mans won " + winner);
                     break;
                 }
             }
-            if (!boardPrime[1][1].getOwner().equals(Square.owner.neutral)) {
+            if (!boardPrime[1][1].getOwner().equals(Square.owner.neutral)) { //checks diagonals
                 if (boardPrime[2][2].getOwner().equals(boardPrime[1][1].getOwner()) && boardPrime[0][0].getOwner().equals(boardPrime[1][1].getOwner()) || boardPrime[0][2].getOwner().equals(boardPrime[1][1].getOwner()) && boardPrime[2][0].getOwner().equals(boardPrime[1][1].getOwner())) {
                     winner = boardPrime[1][1].getOwner();
                     System.out.println("This mans won " + winner);
@@ -187,14 +219,14 @@ public class DrawMgr extends JPanel implements MouseListener{
                 g2.setColor(new Color(255, 255, 255, 200));
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 g2.setColor(Color.BLACK);
-                g2.drawString("Player 1 wins!", getWidth() / 2 - 60, getHeight() / 2);
+                drawCenteredString(g2, "Player 1 wins!", 48, this);
 
             }
             else if(winner.equals(Square.owner.player2)){
                 g2.setColor(new Color(255, 255, 255, 200));
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 g2.setColor(Color.BLACK);
-                g2.drawString("Player 2 wins!", getWidth() / 2 - 60, getHeight() / 2);
+                drawCenteredString(g2, "Player 2 wins!", 48, this);
 
             }
         }
@@ -207,6 +239,78 @@ public class DrawMgr extends JPanel implements MouseListener{
 
     }
 
+    public void drawPauseMenu(Graphics2D g2){
+        g2.setColor(new Color(255, 255, 255, 200));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+        g2.setFont(new Font("TimesRoman", Font.PLAIN, 36));
+        g2.setColor(Color.BLACK);
+        drawCenteredString(g2, "Game Paused", 36, this);
+        int buttonWidth = getWidth() / 4;
+        int buttonHeight = getHeight() / 18;
+        undoButton.setBounds(getWidth() / 2 - buttonWidth/2, getHeight() / 2, buttonWidth, buttonHeight);
+        add(undoButton);
+        revalidate();
+        //g2.drawRect(undoButton.getX(), undoButton.getY(), undoButton.getWidth(), undoButton.getHeight());
+    }
+
+    public void undo_last_move(){
+        if(changedSquares.size() > 0){
+            player1Turn = !player1Turn;
+            Square last_move = changedSquares.get(changedSquares.size() - 1);
+            if(connectedSquares.size() > 0){ //check if square removed was part of winning three
+
+                Square[] last_connected = connectedSquares.get(connectedSquares.size() - 1);
+                int[] coordsBetween = {last_connected[1].getCoords()[0] - last_connected[0].getCoords()[0], last_connected[1].getCoords()[1] - last_connected[0].getCoords()[1]};
+                if(last_move.equals(last_connected[0]) || last_move.equals(last_connected[1]) || last_move.equals(getSquare(new Point(coordsBetween[0], coordsBetween[1])))){
+                    connectedSquares.remove(last_connected);
+                    last_move.getParentBoard().setThisOwner(Square.owner.neutral);
+                }
+
+            }
+            last_move.setOwner(Square.owner.neutral);
+            corresponding_board = last_corresponding;
+            changedSquares.remove(last_move);
+            repaint();
+        }
+
+    }
+
+    //helpful static methods for formatting GUI
+    public static String join(String separator, String[] stringArray){ //why the nut is this not a default method of strings
+        String ans = "";
+        for(int i = 0; i < stringArray.length; i++){
+            ans += stringArray[i];
+            if(i < stringArray.length - 1){
+                ans += separator;
+            }
+        }
+        return ans;
+    }
+
+    public static void drawCenteredString(Graphics g, String string, int fontSize, JPanel panel){
+        g.setFont(new Font("TimesRoman", Font.PLAIN, fontSize));
+        if(string.length() > fontSize * fontSize / 20){ //wraps text
+            String[] stringArray = string.split(" ");
+            String[] stringArray1 = Arrays.copyOfRange(stringArray, 0, stringArray.length / 2);
+            String[] stringArray2 = Arrays.copyOfRange(stringArray, stringArray.length / 2, stringArray.length);
+            g.drawString(DrawMgr.join(" ", stringArray1), panel.getWidth() / 2 - fontSize/9 * (string.length() + 30), panel.getHeight()/2);
+            g.drawString(DrawMgr.join(" ", stringArray2), panel.getWidth() / 2 - fontSize/9 * (string.length() + 30), panel.getHeight()/2 + fontSize * 2);
+        }
+        else{
+            g.drawString(string, panel.getWidth() / 2 - fontSize/10 * string.length(), panel.getHeight() / 2);
+        }
+    }
+
+    public static ArrayList<Component> getAllComponents(final Container c) { //mostly for debugging
+        Component[] comps = c.getComponents();
+        ArrayList<Component> compList = new ArrayList<Component>();
+        for (Component comp : comps) {
+            compList.add(comp);
+            if (comp instanceof Container)
+                compList.addAll(getAllComponents((Container) comp));
+        }
+        return compList;
+    }
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -233,6 +337,7 @@ public class DrawMgr extends JPanel implements MouseListener{
                 squareClicked.setOwner(curr_owner);
                 changedSquares.add(squareClicked);
                 if((changedSquares.size() > 1)){
+                    last_corresponding = corresponding_board;
                     corresponding_board.check_win();
                 }
                 corresponding_board = boardPrime[squareClicked.getIndices()[1]][squareClicked.getIndices()[0]];
