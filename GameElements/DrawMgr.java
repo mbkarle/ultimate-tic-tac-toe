@@ -169,26 +169,10 @@ public class DrawMgr extends JPanel implements MouseListener{
         int[] offset_coords = new int[]{point.x - offset[0], point.y - offset[1]};
         double x_divisor = getWidth() / 9;
         double y_divisor = getHeight() / 9;
-        int[] potential_coords = new int[]{(int)(x_divisor * Math.floor(offset_coords[0] / x_divisor)), (int)(y_divisor * Math.floor(offset_coords[1] / y_divisor))};
-        Square ans;
-        int i = 0;
-        for(Square square : squaresList){
-            i++;
-            if(Math.abs(square.getCoords()[0] - potential_coords[0]) < 10 && Math.abs(square.getCoords()[1] - potential_coords[1]) < 10){
-                ans = square;
-//                System.out.println("GameElements.Square's coords" + Arrays.toString(square.getCoords()));
-//                System.out.println("Mouse rounded coords" + Arrays.toString(potential_coords));
-//                System.out.println("We have a match");
-//                System.out.println();
-                return ans;
-            }
-            else if(i == squaresList.size()){
-                System.out.println("GameElements.Square's coords" + Arrays.toString(square.getCoords()));
-                System.out.println("Mouse rounded coords" + Arrays.toString(potential_coords));
-                System.out.println("no match");
-            }
-        }
-        return new Square(0, 0, new Board(0, 0));
+        int[] potential_indices = {(int)(offset_coords[0]/x_divisor), (int)(offset_coords[1]/y_divisor)};
+        int[] board_indices = {(int)Math.floor(potential_indices[1]/3), (int)Math.floor(potential_indices[0]/3), potential_indices[1] % 3, potential_indices[0] % 3};
+        Square ans = boardPrime[board_indices[0]][board_indices[1]].getBetaBoard()[board_indices[2]][board_indices[3]];
+        return ans;
     }
 
     public void check_full_win(Graphics2D g2){
@@ -272,6 +256,9 @@ public class DrawMgr extends JPanel implements MouseListener{
             last_move.setOwner(Square.owner.neutral);
             corresponding_board = last_corresponding;
             changedSquares.remove(last_move);
+            if(winner != Square.owner.neutral){
+                winner = Square.owner.neutral;
+            }
             repaint();
         }
 
