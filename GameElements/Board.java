@@ -10,6 +10,8 @@ public class Board {
     private Square[][] betaBoard = new Square[3][3];
     private int rowIndex;
     private int colIndex;
+    private int takenSquares;
+    protected String constructorName;
     Square.owner thisOwner = Square.owner.neutral;
     DrawMgr thisMgr;
 
@@ -23,6 +25,8 @@ public class Board {
                 betaBoard[i][j] = new Square(i, j, this);
             }
         }
+        constructorName = "Board";
+        takenSquares = 0;
     }
 
     public Square[][] getBetaBoard(){
@@ -83,5 +87,17 @@ public class Board {
 
     public void setThisMgr(DrawMgr drawMgr){
         thisMgr = drawMgr;
+    }
+
+    public String getConstructorName(){
+        return constructorName;
+    }
+
+    public int getTakenSquares(){
+        return takenSquares;
+    }
+
+    public void setTakenSquares(int num){
+        takenSquares = num;
     }
 }

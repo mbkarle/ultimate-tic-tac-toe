@@ -20,13 +20,15 @@ public class DrawMgr extends JPanel implements MouseListener{
     private Board[][] boardPrime = new Board[3][3];
     private ArrayList<Square[]> connectedSquares;
     private int boxWidth, boxHeight;
-    private boolean player1Turn, paused;
+    private boolean player1Turn, paused, initialized;
     Point mouseCoords;
     ArrayList<Square> squaresList;
     ArrayList<Square> changedSquares;
     Board corresponding_board, last_corresponding;
     private Square.owner winner;
     private JButton pauseButton, undoButton;
+    private NeutralBoard neutralBoard;
+    private Timer pick_timer = new Timer(300, null);
 
    // Graphics2D graphics2D;
 
@@ -35,7 +37,6 @@ public class DrawMgr extends JPanel implements MouseListener{
 
         addMouseListener(this);
         setFocusable(true);
-        initialize_game(); //add mouse listener and begin game!
 
         setLayout(null);   //add pause button
 
@@ -62,6 +63,10 @@ public class DrawMgr extends JPanel implements MouseListener{
                 undo_last_move();
             }
         });
+
+        neutralBoard = new NeutralBoard(0, 0, this);
+        initialized = false;
+        initialize_game(); //add mouse listener and begin game!
     }
 
     public void paintComponent(Graphics g){ //handles all drawing
@@ -69,20 +74,71 @@ public class DrawMgr extends JPanel implements MouseListener{
         Graphics2D g2 = (Graphics2D)g;
         for(Square square : changedSquares){
             Square.owner squareOwner = square.getOwner();
-            if(squareOwner.equals(Square.owner.player1)){
-                g2.drawImage(readImg("tictacX.png"), square.getCoords()[0], square.getCoords()[1], boxWidth / 3, boxHeight / 3, null);
-            }
-            else if(squareOwner.equals(Square.owner.player2)){
-                g2.drawImage(readImg("tictacO.png"), square.getCoords()[0], square.getCoords()[1], boxWidth / 3, boxHeight / 3, null);
-            }
-            else{
-                System.out.println("This square is neutral");
+            if(!square.getParentBoard().getConstructorName().equals("NeutralBoard")){
+                if(squareOwner.equals(Square.owner.player1)){
+                    g2.drawImage(readImg("tictacX.png"), square.getCoords()[0], square.getCoords()[1], boxWidth / 3, boxHeight / 3, null);
+                }
+                else if(squareOwner.equals(Square.owner.player2)){
+                    g2.drawImage(readImg("tictacO.png"), square.getCoords()[0], square.getCoords()[1], boxWidth / 3, boxHeight / 3, null);
+                }
+                else{
+                    System.out.println("This square is neutral");
+                }
             }
         }
         drawBoard(g2);
         if(paused){
             drawPauseMenu(g2);
         }
+        if(!initialized){
+            neutralBoard.setActive(true);
+        }
+
+        if(neutralBoard.isActive()){
+            if(!initialized){
+                ActionListener a = new ActionListener() {
+                    int counter = 0;
+                    boolean selected = false;
+                    Square selectedSquare;
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Timer source = (Timer)e.getSource();
+                        if(!selected){
+                            for(Square[] squares : neutralBoard.getBetaBoard()){
+                                for(Square square : squares){
+                                    square.setOwner(Square.owner.neutral);
+                                }
+                            }
+                            Square sq = neutralBoard.getRandSquare();
+                            sq.setOwner(Square.owner.player1);
+                            if(counter == 15){
+                                selectedSquare = sq;
+                                selected = true;
+                                initialized = true;
+                            }
+                        }
+                        else{
+                            if(counter == 17){
+                                neutralBoard.setActive(false);
+                                player1Turn = !player1Turn;
+                                corresponding_board = boardPrime[selectedSquare.getIndices()[1]][selectedSquare.getIndices()[0]];
+                                source.stop();
+                                repaint();
+                            }
+                        }
+                        counter++;
+                        repaint();
+
+                    }
+                };
+                if(pick_timer.getActionListeners().length < 1){
+                    pick_timer.addActionListener(a);
+                }
+                pick_timer.start();
+            }
+            neutralBoard.draw(g2);
+        }
+
     }
 
     public void initialize_game(){ //starts and resets game
@@ -152,7 +208,7 @@ public class DrawMgr extends JPanel implements MouseListener{
 
     public static BufferedImage readImg(String fileName){ //reads file to produce a buffered image
         BufferedImage img = null;
-        String filePath = "/Users/student/IdeaProjects/Ultimate Tic Tac Toe/src/ImageAssets/" + fileName;
+        String filePath = "./src/ImageAssets/" + fileName;
         File file = new File(filePath);
         try{
             img = ImageIO.read(file);
@@ -243,7 +299,8 @@ public class DrawMgr extends JPanel implements MouseListener{
         if(changedSquares.size() > 0){
             player1Turn = !player1Turn;
             Square last_move = changedSquares.get(changedSquares.size() - 1);
-            if(connectedSquares.size() > 0){ //check if square removed was part of winning three
+            last_corresponding = last_move.getParentBoard();
+            if(connectedSquares.size() > 0 && !last_corresponding.getConstructorName().equals("NeutralBoard")){ //check if square removed was part of winning three
 
                 Square[] last_connected = connectedSquares.get(connectedSquares.size() - 1);
                 int[] coordsBetween = {last_connected[1].getCoords()[0] - last_connected[0].getCoords()[0], last_connected[1].getCoords()[1] - last_connected[0].getCoords()[1]};
@@ -256,6 +313,9 @@ public class DrawMgr extends JPanel implements MouseListener{
             last_move.setOwner(Square.owner.neutral);
             corresponding_board = last_corresponding;
             changedSquares.remove(last_move);
+            if(last_corresponding.getConstructorName().equals("NeutralBoard")){
+                neutralBoard.setActive(true);
+            }
             if(winner != Square.owner.neutral){
                 winner = Square.owner.neutral;
             }
@@ -312,7 +372,7 @@ public class DrawMgr extends JPanel implements MouseListener{
             initialize_game();
             repaint();
         }
-        else if(!paused){
+        else if(!paused && initialized){
             mouseCoords = MouseInfo.getPointerInfo().getLocation();
             Square.owner curr_owner = Square.owner.neutral;
             if(player1Turn){
@@ -321,15 +381,30 @@ public class DrawMgr extends JPanel implements MouseListener{
             else{
                 curr_owner = Square.owner.player2;
             }
-            Square squareClicked = getSquare(mouseCoords);
-            if(squareClicked.getOwner().equals(Square.owner.neutral) && squareClicked.getParentBoard().equals(corresponding_board) || changedSquares.size() == 0){
+            Square squareClicked;
+            if(neutralBoard.isActive()){
+                squareClicked = neutralBoard.getSquare(mouseCoords);
+                neutralBoard.setActive(false);
+            }
+            else{
+                squareClicked = getSquare(mouseCoords);
+            }
+            if(squareClicked.getOwner().equals(Square.owner.neutral) && squareClicked.getParentBoard().equals(corresponding_board)){
                 squareClicked.setOwner(curr_owner);
+                squareClicked.getParentBoard().setTakenSquares(squareClicked.getParentBoard().getTakenSquares() + 1);
                 changedSquares.add(squareClicked);
                 if((changedSquares.size() > 1)){
                     last_corresponding = corresponding_board;
-                    corresponding_board.check_win();
+                    if(corresponding_board.getConstructorName().equals("Board")){
+                        corresponding_board.check_win();
+                    }
+
                 }
                 corresponding_board = boardPrime[squareClicked.getIndices()[1]][squareClicked.getIndices()[0]];
+                if(corresponding_board.getTakenSquares() == 9){
+                    corresponding_board = neutralBoard;
+                    neutralBoard.setActive(true);
+                }
                 repaint();
 
                 player1Turn = !player1Turn;
