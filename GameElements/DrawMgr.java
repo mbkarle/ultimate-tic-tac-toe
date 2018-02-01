@@ -65,7 +65,7 @@ public class DrawMgr extends JPanel implements MouseListener{
         });
 
         neutralBoard = new NeutralBoard(0, 0, this);
-        initialized = false;
+
         initialize_game(); //add mouse listener and begin game!
     }
 
@@ -99,7 +99,7 @@ public class DrawMgr extends JPanel implements MouseListener{
                 ActionListener a = new ActionListener() {
                     int counter = 0;
                     boolean selected = false;
-                    Square selectedSquare;
+                    Square selectedSquare, prev;
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         Timer source = (Timer)e.getSource();
@@ -110,7 +110,11 @@ public class DrawMgr extends JPanel implements MouseListener{
                                 }
                             }
                             Square sq = neutralBoard.getRandSquare();
+                            while(sq.equals(prev)){
+                                sq = neutralBoard.getRandSquare();
+                            }
                             sq.setOwner(Square.owner.player1);
+                            prev = sq;
                             if(counter == 15){
                                 selectedSquare = sq;
                                 selected = true;
@@ -123,6 +127,8 @@ public class DrawMgr extends JPanel implements MouseListener{
                                 player1Turn = !player1Turn;
                                 corresponding_board = boardPrime[selectedSquare.getIndices()[1]][selectedSquare.getIndices()[0]];
                                 source.stop();
+                                selected = false;
+                                counter = 0;
                                 repaint();
                             }
                         }
@@ -134,7 +140,9 @@ public class DrawMgr extends JPanel implements MouseListener{
                 if(pick_timer.getActionListeners().length < 1){
                     pick_timer.addActionListener(a);
                 }
-                pick_timer.start();
+                if(!pick_timer.isRunning()) {
+                    pick_timer.start();
+                }
             }
             neutralBoard.draw(g2);
         }
@@ -142,6 +150,7 @@ public class DrawMgr extends JPanel implements MouseListener{
     }
 
     public void initialize_game(){ //starts and resets game
+        initialized = false;
         squaresList = new ArrayList<>();
         changedSquares = new ArrayList<>();
         connectedSquares = new ArrayList<>();
@@ -303,8 +312,8 @@ public class DrawMgr extends JPanel implements MouseListener{
             if(connectedSquares.size() > 0 && !last_corresponding.getConstructorName().equals("NeutralBoard")){ //check if square removed was part of winning three
 
                 Square[] last_connected = connectedSquares.get(connectedSquares.size() - 1);
-                int[] coordsBetween = {last_connected[1].getCoords()[0] - last_connected[0].getCoords()[0], last_connected[1].getCoords()[1] - last_connected[0].getCoords()[1]};
-                if(last_move.equals(last_connected[0]) || last_move.equals(last_connected[1]) || last_move.equals(getSquare(new Point(coordsBetween[0], coordsBetween[1])))){
+                int[] coordsBetween = {(last_connected[1].getIndices()[0] + last_connected[0].getIndices()[0]) / 2, (last_connected[1].getIndices()[1] + last_connected[0].getIndices()[1]) / 2};
+                if(last_move.equals(last_connected[0]) || last_move.equals(last_connected[1]) || last_move.equals(last_corresponding.getBetaBoard()[coordsBetween[1]][coordsBetween[0]])){
                     connectedSquares.remove(last_connected);
                     last_move.getParentBoard().setThisOwner(Square.owner.neutral);
                 }
@@ -322,6 +331,17 @@ public class DrawMgr extends JPanel implements MouseListener{
             repaint();
         }
 
+    }
+
+    public void winOnStart(){
+        for(Board[] bs : boardPrime){
+            for(Board b : bs){
+                b.setThisOwner(Square.owner.player1);
+            }
+        }
+        for (int i = 0; i < 20; i++) {
+            changedSquares.add(new Square(0,0, new Board(0,0)));
+        }
     }
 
     //helpful static methods for formatting GUI
@@ -368,6 +388,7 @@ public class DrawMgr extends JPanel implements MouseListener{
 
     @Override
     public void mousePressed(MouseEvent e) {
+
         if(!winner.equals(Square.owner.neutral)){
             initialize_game();
             repaint();
